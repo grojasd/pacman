@@ -121,9 +121,42 @@ function movePacman( game ) {
   wrapTunnel( p, width );
 }
 
-function decideGhost( game, g ) {
+// Celda objetivo de persecucion segun la conducta del fantasma.
+//   chaser    -> posicion redondeada de Pac-Man
+//   predictor -> 2 celdas delante de Pac-Man en su direccion
+//   flanker   -> celda espejo de Pac-Man respecto al perseguidor (ghosts[0])
+//   erratic   -> sin objetivo (aleatorio)
+function ghostTarget( game, g ) {
   const grid = game.grid;
   const p = game.pacman;
+  const px = Math.round( p.x );
+  const py = Math.round( p.y );
+
+  if ( g.kind === 'predictor' ) {
+    const d = DIRS[ p.dir ];
+    const tx = px + d.x * 2;
+    const ty = py + d.y * 2;
+    return {
+      x: Math.max( 0, Math.min( grid[ 0 ].length - 1, tx ) ),
+      y: Math.max( 0, Math.min( grid.length - 1, ty ) ),
+    };
+  }
+
+  if ( g.kind === 'flanker' ) {
+    const a = game.ghosts[ 0 ];
+    const tx = 2 * px - Math.round( a.x );
+    const ty = 2 * py - Math.round( a.y );
+    return {
+      x: Math.max( 0, Math.min( grid[ 0 ].length - 1, tx ) ),
+      y: Math.max( 0, Math.min( grid.length - 1, ty ) ),
+    };
+  }
+
+  return { x: px, y: py };
+}
+
+function decideGhost( game, g ) {
+  const grid = game.grid;
 
   const options = Object.keys( DIRS ).filter(
     ( dir ) => dir !== OPPOSITE[ g.dir ] && canMove( grid, g.x, g.y, dir, 'ghost' )
@@ -131,25 +164,26 @@ function decideGhost( game, g ) {
   // Sin salida (callejon): permitir el giro de 180.
   const choices = options.length ? options : [ '' + OPPOSITE[ g.dir ] ];
 
-  if ( g.kind === 'hunter' ) {
-    const px = Math.round( p.x );
-    const py = Math.round( p.y );
-    let best = choices[ 0 ];
-    let bestDist = Infinity;
-    for ( const dir of choices ) {
-      const d = DIRS[ dir ];
-      const nx = g.x + d.x;
-      const ny = g.y + d.y;
-      const dist = Math.abs( nx - px ) + Math.abs( ny - py );
-      if ( dist < bestDist ) {
-        bestDist = dist;
-        best = dir;
-      }
-    }
-    g.dir = best;
-  } else {
+  // El erratico elige direccion aleatoria entre las validas.
+  if ( g.kind === 'erratic' ) {
     g.dir = choices[ Math.floor( Math.random() * choices.length ) ];
+    return;
   }
+
+  const target = ghostTarget( game, g );
+  let best = choices[ 0 ];
+  let bestDist = Infinity;
+  for ( const dir of choices ) {
+    const d = DIRS[ dir ];
+    const nx = g.x + d.x;
+    const ny = g.y + d.y;
+    const dist = Math.abs( nx - target.x ) + Math.abs( ny - target.y );
+    if ( dist < bestDist ) {
+      bestDist = dist;
+      best = dir;
+    }
+  }
+  g.dir = best;
 }
 
 function moveGhost( game, g ) {
