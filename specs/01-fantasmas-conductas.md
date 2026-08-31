@@ -1,6 +1,6 @@
 # SPEC 01 — Cuatro fantasmas con conductas distintas
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** ninguna
 > **Fecha:** 2026-08-30
 > **Objetivo:** Añadir cuatro fantasmas al juego, cada uno con una conducta de persecución propia (perseguidor, predictor, flanqueador y errático) y liberación cronometrada desde la casa de fantasmas.
@@ -63,17 +63,17 @@ Cada paso queda jugable y verificable en el navegador.
 
 ## Criterios de aceptación
 
-- [ ] Al iniciar partida hay exactamente 4 fantasmas visibles dentro de la casa.
-- [ ] El perseguidor (rojo) sale al instante; el resto salen de uno en uno con ~12 s de separación.
-- [ ] Un fantasma antes de su turno permanece inmóvil en la casa.
-- [ ] Al salir, el fantasma sube y cruza la puerta sin atascarse en los tiles `3`.
-- [ ] El perseguidor elige en cada cruce el camino que minimiza la distancia a Pac-Man (persecución agresiva).
-- [ ] El predictor apunta a la celda 2 posiciones delante de Pac-Man según su dirección.
-- [ ] El flanqueador apunta a la celda espejo de Pac-Man respecto al perseguidor.
-- [ ] El errático elige dirección aleatoria entre las válidas en cada cruce.
-- [ ] Los 4 avanzan a la misma velocidad.
-- [ ] Al perder una vida, los 4 vuelven a la casa y se re-liberan como al inicio.
-- [ ] No hay errores en la consola y la partida se puede ganar y perder.
+- [x] Al iniciar partida hay exactamente 4 fantasmas visibles dentro de la casa.
+- [x] El perseguidor (rojo) sale al instante; el resto salen de uno en uno con ~12 s de separación.
+- [x] Un fantasma antes de su turno permanece inmóvil en la casa.
+- [x] Al salir, el fantasma sube y cruza la puerta sin atascarse en los tiles `3`.
+- [x] El perseguidor elige en cada cruce el camino que minimiza la distancia a Pac-Man (persecución agresiva).
+- [x] El predictor apunta a la celda 2 posiciones delante de Pac-Man según su dirección.
+- [x] El flanqueador apunta a la celda espejo de Pac-Man respecto al perseguidor.
+- [x] El errático elige dirección aleatoria entre las válidas en cada cruce.
+- [x] Los 4 avanzan a la misma velocidad.
+- [x] Al perder una vida, los 4 vuelven a la casa y se re-liberan como al inicio.
+- [x] No hay errores en la consola y la partida se puede ganar y perder.
 
 ## Decisiones
 
