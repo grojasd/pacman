@@ -86,6 +86,9 @@ function canMove( grid, x, y, dir, actor ) {
   const ty = y + d.y;
   // Tunel: salir por un borde en la fila del tunel siempre es valido.
   if ( ty === TUNNEL_ROW && ( tx < 0 || tx >= grid[ 0 ].length ) ) return true;
+  // Fantasmas no re-entran a la casa por la puerta hacia abajo (evita quedar
+  // encerrados en el ciclo interior de la casa).
+  if ( actor === 'ghost' && dir === 'down' && isDoor( grid, tx, ty ) ) return false;
   return !isWall( grid, tx, ty, actor );
 }
 
