@@ -73,6 +73,11 @@ function isWall( grid, x, y, actor ) {
   return false;
 }
 
+// Una celda es un tile de puerta de la casa de fantasmas?
+function isDoor( grid, x, y ) {
+  return grid[ y ] && grid[ y ][ x ] === 3;
+}
+
 // Puede el actor avanzar desde (x,y) en la direccion dir?
 function canMove( grid, x, y, dir, actor ) {
   const d = DIRS[ dir ];
@@ -81,6 +86,9 @@ function canMove( grid, x, y, dir, actor ) {
   const ty = y + d.y;
   // Tunel: salir por un borde en la fila del tunel siempre es valido.
   if ( ty === TUNNEL_ROW && ( tx < 0 || tx >= grid[ 0 ].length ) ) return true;
+  // Fantasmas no re-entran a la casa por la puerta hacia abajo (evita quedar
+  // encerrados en el ciclo interior de la casa).
+  if ( actor === 'ghost' && dir === 'down' && isDoor( grid, tx, ty ) ) return false;
   return !isWall( grid, tx, ty, actor );
 }
 
