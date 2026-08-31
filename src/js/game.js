@@ -13,6 +13,22 @@ const OPPOSITE = { left: 'right', right: 'left', up: 'down', down: 'up' };
 const PACMAN_SPEED = 0.125; // 1/8 celda/frame -> alinea cada 8 frames
 const GHOST_SPEED = 0.1;    // 1/10 celda/frame
 
+// frames entre liberaciones (~12 s a 60 fps)
+const GHOST_RELEASE_DELAY = 720;
+
+// Inicializa los fantasmas en la casa según su orden de salida:
+// el primero (perseguidor) activo, el resto en 'pen'.
+function initGhosts() {
+  return GHOST_STARTS.map( ( g, i ) => ( {
+    x: g.x,
+    y: g.y,
+    dir: 'up',
+    speed: GHOST_SPEED,
+    kind: g.kind,
+    state: i === 0 ? 'active' : 'pen',
+  } ) );
+}
+
 // Crea una partida nueva. Copia MAZE (pristino) a game.grid para poder comer
 // dots sin destruir el original, y reiniciar.
 function createGame() {
@@ -28,6 +44,7 @@ function createGame() {
     score: 0,
     lives: 3,
     dotsRemaining: dots,
+    ghostReleaseTimer: GHOST_RELEASE_DELAY,
     grid,
     pacman: {
       x: PACMAN_START.x,
@@ -36,13 +53,7 @@ function createGame() {
       nextDir: null,
       speed: PACMAN_SPEED,
     },
-    ghosts: GHOST_STARTS.map( ( g ) => ( {
-      x: g.x,
-      y: g.y,
-      dir: 'up',
-      speed: GHOST_SPEED,
-      kind: g.kind,
-    } ) ),
+    ghosts: initGhosts(),
   };
 }
 
@@ -145,9 +156,25 @@ function moveGhost( game, g ) {
   const grid = game.grid;
   const width = grid[ 0 ].length;
 
+  // 'pen': espera inmóvil en la casa.
+  if ( g.state === 'pen' ) return;
+
   if ( aligned( g.x ) && aligned( g.y ) ) {
     g.x = Math.round( g.x );
     g.y = Math.round( g.y );
+
+    // 'leaving': sube recto hasta cruzar la puerta (linea 11) y activarse.
+    if ( g.state === 'leaving' ) {
+      g.dir = 'up';
+      if ( Math.round( g.y ) <= 11 ) g.state = 'active';
+      else {
+        const d = DIRS[ g.dir ];
+        g.x += d.x * g.speed;
+        g.y += d.y * g.speed;
+        return;
+      }
+    }
+
     decideGhost( game, g );
     if ( !canMove( grid, g.x, g.y, g.dir, 'ghost' ) ) return;
   }
@@ -164,11 +191,8 @@ function resetPositions( game ) {
   p.y = PACMAN_START.y;
   p.dir = 'left';
   p.nextDir = null;
-  game.ghosts.forEach( ( g, i ) => {
-    g.x = GHOST_STARTS[ i ].x;
-    g.y = GHOST_STARTS[ i ].y;
-    g.dir = 'up';
-  } );
+  game.ghosts = initGhosts();
+  game.ghostReleaseTimer = GHOST_RELEASE_DELAY;
 }
 
 function collides( a, b ) {
@@ -177,6 +201,18 @@ function collides( a, b ) {
 
 function update( game ) {
   movePacman( game );
+
+  // Liberacion cronometrada: baja el timer y, al llegar a 0, activa el primer
+  // fantasma en 'pen' (pasa a 'leaving') y reinicia.
+  if ( game.state === 'playing' ) {
+    game.ghostReleaseTimer--;
+    if ( game.ghostReleaseTimer <= 0 ) {
+      game.ghostReleaseTimer = GHOST_RELEASE_DELAY;
+      const next = game.ghosts.find( ( g ) => g.state === 'pen' );
+      if ( next ) next.state = 'leaving';
+    }
+  }
+
   game.ghosts.forEach( ( g ) => moveGhost( game, g ) );
 
   for ( const g of game.ghosts ) {
